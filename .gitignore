@@ -1,0 +1,17 @@
+*~
+\#*\#
+*.swp
+
+/_build/
+/node_modules/
+/_esy/
+
+.merlin
+*.install
+
+*.vo
+*.glob
+*.aux
+.lia.cache
+.nia.cache
+

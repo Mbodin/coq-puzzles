@@ -1,0 +1,13 @@
+{
+	"name": "coq-puzzles",
+	"version": "1.0",
+	"description": "A collection of puzzles formalised in Coq",
+	"esy": {
+		"build": "dune build @all",
+		"buildsInSource": "_build"
+	},
+	"dependencies": {
+		"@opam/dune": "~2.3",
+		"@opam/coq": "8.10.2"
+	}
+}
