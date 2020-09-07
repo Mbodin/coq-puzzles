@@ -1,0 +1,4 @@
+
+-R _build/default/lib Lib
+-R _build/default/theories Puzzles
+

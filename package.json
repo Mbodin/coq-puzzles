@@ -2,6 +2,7 @@
 	"name": "coq-puzzles",
 	"version": "1.0",
 	"description": "A collection of puzzles formalised in Coq",
+	"license": "CeCILL-C",
 	"esy": {
 		"build": "dune build @all",
 		"buildsInSource": "_build"
