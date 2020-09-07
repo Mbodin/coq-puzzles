@@ -5,6 +5,7 @@
 	"license": "CeCILL-C",
 	"esy": {
 		"build": "dune build @all",
+		"install": "dune install --prefix=#{self.install}",
 		"buildsInSource": "_build"
 	},
 	"dependencies": {
