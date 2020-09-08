@@ -1,3 +1,4 @@
 (coq.theory
+	(theories Lib)
   (name Puzzles))
 

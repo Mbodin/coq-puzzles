@@ -1,5 +1,5 @@
 {
-  "checksum": "eaab69a864ff56c243ed58c9d4fed35b",
+  "checksum": "e4a63e63a6421c9d2b7cadeabdca95a9",
   "root": "coq-puzzles@link-dev:./package.json",
   "node": {
     "ocaml@4.9.1000@d41d8cd9": {
@@ -27,7 +27,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "@opam/dune@opam:2.3.1@a922f8c4", "@opam/coq@opam:8.10.2@b8ac903f"
+        "@opam/dune@opam:2.5.1@43be3a37", "@opam/coq@opam:8.10.2@b8ac903f"
       ],
       "devDependencies": []
     },
@@ -88,23 +88,28 @@
       ],
       "devDependencies": [ "ocaml@4.9.1000@d41d8cd9" ]
     },
-    "@opam/dune@opam:2.3.1@a922f8c4": {
-      "id": "@opam/dune@opam:2.3.1@a922f8c4",
+    "@opam/dune@opam:2.5.1@43be3a37": {
+      "id": "@opam/dune@opam:2.5.1@43be3a37",
       "name": "@opam/dune",
-      "version": "opam:2.3.1",
+      "version": "opam:2.5.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/b2/b2b3dd9cdfd34ef8c4583ea8c52c3503c2395bf94c264af19d6450547e12f5cb#sha256:b2b3dd9cdfd34ef8c4583ea8c52c3503c2395bf94c264af19d6450547e12f5cb",
-          "archive:https://github.com/ocaml/dune/releases/download/2.3.1/dune-2.3.1.tbz#sha256:b2b3dd9cdfd34ef8c4583ea8c52c3503c2395bf94c264af19d6450547e12f5cb"
+          "archive:https://opam.ocaml.org/cache/sha256/8f/8f77d3a87f208e0d7cccaa1c48c4bb1bb87d62d07c3f25e9b8ba298e028ce52b#sha256:8f77d3a87f208e0d7cccaa1c48c4bb1bb87d62d07c3f25e9b8ba298e028ce52b",
+          "archive:https://github.com/ocaml/dune/releases/download/2.5.1/dune-2.5.1.tbz#sha256:8f77d3a87f208e0d7cccaa1c48c4bb1bb87d62d07c3f25e9b8ba298e028ce52b"
         ],
         "opam": {
           "name": "dune",
-          "version": "2.3.1",
-          "path": "esy.lock/opam/dune.2.3.1"
+          "version": "2.5.1",
+          "path": "esy.lock/opam/dune.2.5.1"
         }
       },
-      "overrides": [],
+      "overrides": [
+        {
+          "opamoverride":
+            "esy.lock/overrides/opam__s__dune_opam__c__2.5.1_opam_override"
+        }
+      ],
       "dependencies": [
         "ocaml@4.9.1000@d41d8cd9", "@opam/base-unix@opam:base@87d0b2eb",
         "@opam/base-threads@opam:base@36803084",

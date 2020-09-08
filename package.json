@@ -9,7 +9,7 @@
 		"buildsInSource": "_build"
 	},
 	"dependencies": {
-		"@opam/dune": "~2.3",
+		"@opam/dune": "~2.5",
 		"@opam/coq": "8.10.2"
 	}
 }
