@@ -82,7 +82,7 @@ Qed.
   The first player who can no longer play looses.
 **)
 
-Record turn (st st' : board) x y : Prop := {
+Record turn x y (st st' : board) : Prop := {
     turn_valid : state st x y = true ;
     turn_update : forall x' y',
       state st' x' y' =
@@ -90,6 +90,22 @@ Record turn (st st' : board) x y : Prop := {
           state st x' y'
         else false
   }.
+
+(* TODO
+Lemma turn_pickable : forall x y st,
+  pickable (turn x y st).
+Proof.
+  intros x y st. test (state st x y = true /\ (x <> 0 \/ y <> 0)).
+  - intros [valid not_origin]. left.
+    refine {|
+    length := length st ;
+    state x' y' :=
+      if (x' <? x) || (y' <? y) then
+        state st x' y'
+      else false
+  |}.
+Defined.
+*)
 
 (** Reconstruct the board from a position [(x, y)]. **)
 Program Definition make_turn st x y (valid : state st x y = true) (not_origin : x <> 0 \/ y <> 0) := {|
@@ -117,14 +133,14 @@ Proof.
 Qed.
 
 Lemma make_turn_correct : forall st x y valid not_origin,
-  turn st (make_turn st x y valid not_origin) x y.
+  turn x y st (make_turn st x y valid not_origin).
 Proof.
   intros st x y valid not_origin. now constructor.
 Qed.
 
 (** If the current player can’t play, than only the origin is left on the board. **)
 Lemma no_turn_only_origin : forall st,
-  (forall st' x y, ~ turn st st' x y) -> forall x y,
+  (forall st' x y, ~ turn x y st st') -> forall x y,
   state st x y = true <-> x = 0 /\ y = 0.
 Proof.
   intros st N x y. test (x = 0 /\ y = 0).
@@ -143,7 +159,7 @@ Qed.
 (** If [x = y = 1], then only the origin is there and the first player immediately looses. **)
 
 Lemma x_y_1 : forall st x y,
-  ~ turn (initial 1 1 ltac:(apply gt_Sn_O) ltac:(apply gt_Sn_O)) st x y.
+  ~ turn x y (initial 1 1 ltac:(apply gt_Sn_O) ltac:(apply gt_Sn_O)) st.
 Proof.
   intros st x y turn.
   assert (Exy : x = 0 /\ y = 0).

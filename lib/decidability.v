@@ -4,6 +4,7 @@ From Lib Require Export common.
 
 (** * General Definitions **)
 
+(** In contrary to [Decidable.decidable] this file is based on a computable version. **)
 Definition decidable P := { P } + { ~ P }.
 
 Create HintDb decidability.
@@ -125,6 +126,13 @@ Defined.
 
 Hint Resolve False_decidable : decidability.
 
+Lemma not_decidable : forall P,
+  decidable P ->
+  decidable (~ P).
+Proof.
+  prove_decidable.
+Defined.
+
 Lemma eq_refl_decidable : forall T (x : T),
   decidable (x = x).
 Proof.
@@ -145,6 +153,172 @@ Ltac test P :=
 Definition comparable T := forall x y : T, decidable (x = y).
 
 Hint Unfold comparable : decidability.
+
+
+(** * Classical Logic **)
+
+(** Once a proposition is proven decidable, we get all the usual classical properties
+  for free, without having to add any axioms to Coq. **)
+
+Lemma dec_excluded_middle : forall P,
+  decidable P ->
+  P \/ ~ P.
+Proof.
+  now intros P [?|?]; [left|right].
+Qed.
+
+Lemma dec_not_not : forall P,
+  decidable P ->
+  ~ ~ P ->
+  P.
+Proof.
+  now intros P [?|?].
+Qed.
+
+Lemma not_not : forall P : Prop,
+  P ->
+  ~ ~ P.
+Proof.
+  now auto.
+Qed.
+
+Lemma dec_pierce : forall P Q,
+  decidable P ->
+  ((P -> Q) -> P) -> P.
+Proof.
+  intros P Q [?|?] F; auto.
+  now apply F.
+Qed.
+
+Lemma dec_not_and : forall P Q,
+  decidable P ->
+  ~ (P /\ Q) ->
+  ~ P \/ ~ Q.
+Proof.
+  now intros P Q [?|?]; auto.
+Qed.
+
+Lemma not_or : forall P Q,
+  ~ (P \/ Q) ->
+  ~ P /\ ~ Q.
+Proof.
+  now auto.
+Qed.
+
+Lemma or_not : forall P Q,
+  ~ P \/ ~ Q ->
+  ~ (P /\ Q).
+Proof.
+  now intros P Q [?|?]; auto.
+Qed.
+
+Lemma and_not : forall P Q,
+  ~ P /\ ~ Q ->
+  ~ (P \/ Q).
+Proof.
+  now intros P Q [? ?] [?|?]; auto.
+Qed.
+
+Lemma dec_flatten_impl : forall P Q : Prop,
+  decidable P ->
+  (P -> Q) ->
+  ~ P \/ Q.
+Proof.
+  now intros P Q [?|?]; auto.
+Qed.
+
+Lemma dec_not_impl : forall P Q : Prop,
+  decidable P ->
+  ~ (P -> Q) ->
+  P \/ ~ Q.
+Proof.
+  now intros P Q [?|?]; auto.
+Qed.
+
+Lemma contrapositive : forall P Q : Prop,
+  (P -> Q) ->
+  ~ Q -> ~ P.
+Proof.
+  now auto.
+Qed.
+
+Lemma dec_contrapositive : forall P Q,
+  decidable P ->
+  (~ P -> ~ Q) ->
+  Q -> P.
+Proof.
+  intros P Q D nf q. apply (dec_not_not _ D).
+  now apply (contrapositive _ (~ Q)); auto.
+Qed.
+
+(** Simplify an hypothesis. **)
+Ltac dsimpl_in H :=
+  repeat match type of H with
+  | ~ ~ ?P =>
+    let D := fresh "D" in
+    assert (D : decidable P); [
+        prove_decidable
+      | let H' := fresh H in
+        assert (H' : P); [
+            now apply (dec_not_not P D H)
+          | clear H; rename H' into H; clear D ] ]
+  | ~ (?P \/ ?Q) =>
+    let H' := fresh H in
+    assert (H' : ~ P /\ ~ Q); [
+        now apply (not_or _ _ H)
+      | clear H; rename H' into H ]
+  | ~ (?P /\ ?Q) =>
+    let D := fresh "D" in
+    assert (D : decidable P); [
+        prove_decidable
+      | let H' := fresh H in
+        assert (H' : ~ P \/ ~ Q); [
+            now apply (dec_not_and P Q D H)
+          | clear H; rename H' into H; clear D ] ]
+  | ~ (?P -> ?Q) =>
+    let D := fresh "D" in
+    assert (D : decidable P); [
+        prove_decidable
+      | let H' := fresh H in
+        assert (H' : ~ P \/ ~ Q); [
+            now apply (dec_not_impl P Q D H)
+          | clear H; rename H' into H; clear D ] ]
+  | True /\ ?P => destruct H as [_ H]
+  | ?P /\ True => destruct H as [H _]
+  | False \/ ?P => destruct H as [H|H]; [ now destruct H |]
+  | ?P \/ False => destruct H as [H|H]; [| now destruct H ]
+  end.
+
+Tactic Notation "dsimpl" "in" hyp(H) :=
+  dsimpl_in H.
+
+(** Simplify the goal. **)
+Ltac dsimpl :=
+  lazymatch goal with
+  | |- ~ _ -> ~ _ => apply contrapositive; dsimpl
+  | |- _ -> _ =>
+    let H := fresh "H" in
+    intro H;
+    dsimpl in H;
+    dsimpl;
+    generalize H; clear H
+  | |- _ =>
+    repeat lazymatch goal with
+    | |- ~ ~ ?P => apply (not_not P)
+    | |- ~ (?P \/ ?Q) => apply (and_not P Q)
+    | |- ~ (?P /\ ?Q) => apply (or_not P Q)
+    | |- True /\ ?P => split; [now auto|]
+    | |- ?P /\ True => split; [|now auto]
+    | |- False \/ ?P => right
+    | |- ?P \/ False => left
+    end
+  end.
+
+Tactic Notation "dsimpl" "in" "*" :=
+  dsimpl;
+  repeat match goal with
+  | H : _ |- _ => progress dsimpl in H
+  end.
 
 
 (** * Adding External Lemmas to the Database **)
@@ -171,6 +345,8 @@ Proof.
 Defined.
 
 Hint Resolve comparison_comparable : decidability.
+
+(** ** Lists **)
 
 Lemma list_comparable : forall T,
   comparable T ->
