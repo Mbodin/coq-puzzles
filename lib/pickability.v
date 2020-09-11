@@ -1,57 +1,10 @@
 (** Definitions to build computable functions. **)
 
-From Lib Require Export common.
-(*From mathcomp Require Import ssreflect ssrbool eqtype.*)
+From Lib Require Export decidability.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
-
-(** * General lemmas about decidability **)
-
-Lemma decidable_and : forall P1 P2,
-  decidable P1 ->
-  decidable P2 ->
-  decidable (P1 /\ P2).
-Proof.
-  intros P1 P2 [p1|p1].
-  - intros [p2|p2].
-    + now left.
-    + now right.
-  - now intros _; right.
-Defined.
-
-Lemma decidable_equiv : forall P1 P2,
-  (P1 <-> P2) ->
-  decidable P1 ->
-  decidable P2.
-Proof.
-  intros P1 P2 [I1 I2] [H | nH].
-  - now left; auto.
-  - now right; auto.
-Defined.
-
-Lemma is_true_bool : forall b1 b2 : bool,
-  (b1 = b2) <-> (b1 <-> b2).
-Proof.
-  do 2 intros [|]; split;
-    tauto
-    || (intros H; rewrite H; tauto)
-    || (intros [? ?]; exfalso;
-        match goal with
-        | H : is_true true -> is_true false |- _ =>
-          let H' := fresh H in
-          set (H' := H eq_refl); inversion H'
-        | _ => idtac
-        end).
-Qed.
-
-Lemma is_true_decidable : forall b : bool, decidable b.
-Proof.
-  intros [|].
-  - now left.
-  - now right.
-Defined.
 
 
 (** * Definition of Pickability **)
@@ -82,6 +35,8 @@ Proof.
   - left. now exists x.
   - now right.
 Defined.
+
+Hint Resolve pickable_decidable : decidability.
 
 Lemma pickable_equiv : forall A (P1 P2 : A -> Prop),
   (forall a, P1 a <-> P2 a) ->
@@ -256,12 +211,16 @@ Proof.
   intros A1 A2 P p. apply pickable_decidable. now apply pickable2_weaken.
 Defined.
 
+Hint Resolve pickable2_decidable : decidability.
+
 Lemma pickable3_decidable : forall A1 A2 A3 (P : A1 -> A2 -> A3 -> Prop),
   pickable3 P ->
   decidable (exists x1 x2 x3, P x1 x2 x3).
 Proof.
   intros A1 A2 A3 P p. apply pickable2_decidable. now apply pickable3_weaken.
 Defined.
+
+Hint Resolve pickable3_decidable : decidability.
 
 Lemma pickable4_decidable : forall A1 A2 A3 A4 (P : A1 -> A2 -> A3 -> A4 -> Prop),
   pickable4 P ->
@@ -270,12 +229,16 @@ Proof.
   intros A1 A2 A3 A4 P p. apply pickable3_decidable. now apply pickable4_weaken.
 Defined.
 
+Hint Resolve pickable4_decidable : decidability.
+
 Lemma pickable5_decidable : forall A1 A2 A3 A4 A5 (P : A1 -> A2 -> A3 -> A4 -> A5 -> Prop),
   pickable5 P ->
   decidable (exists x1 x2 x3 x4 x5, P x1 x2 x3 x4 x5).
 Proof.
   intros A1 A2 A3 A4 A5 P p. apply pickable4_decidable. now apply pickable5_weaken.
 Defined.
+
+Hint Resolve pickable5_decidable : decidability.
 
 Lemma pickable2_rotate : forall A1 A2 (P : A1 -> A2 -> Prop),
   pickable2 P ->
