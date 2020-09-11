@@ -1,5 +1,5 @@
 
-From Lib Require Import common.
+From Lib Require Import decidability pickability.
 Open Scope nat_scope.
 
 (** This problem was given to me by Rao Xiaojia.
@@ -127,15 +127,12 @@ Lemma no_turn_only_origin : forall st,
   (forall st' x y, ~ turn st st' x y) -> forall x y,
   state st x y = true <-> x = 0 /\ y = 0.
 Proof.
-  intros st N x y. destruct ((x =? 0) && (y =? 0)) eqn: E.
-  - apply andb_true_iff in E. destruct E as [E1 E2].
-    apply beq_nat_true in E1. apply beq_nat_true in E2.
-    subst. split; auto.
-    intro. apply state_origin.
-  - apply andb_false_iff in E.
-    assert (not_origin : x <> 0 \/ y <> 0).
-    { now destruct E as [E|E]; apply beq_nat_false in E; [ left | right ]. }
-    destruct E as [E|E]; apply beq_nat_false in E;
+  intros st N x y. test (x = 0 /\ y = 0).
+  - intros [? ?]. subst. split; auto.
+    intro. now apply state_origin.
+  - intro nE. assert (not_origin : x <> 0 \/ y <> 0).
+    { now test (x = 0); auto. }
+    clear nE. inversion not_origin;
       (split; [ intros E'; exfalso; eapply N; apply (make_turn_correct _ _ _ E' not_origin)
               | now intros [? ?]; subst ]).
 Qed.

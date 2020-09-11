@@ -1,6 +1,6 @@
 (** Definitions to build computable functions. **)
 
-From Lib Require Export decidability.
+From Lib Require Import decidability.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
