@@ -331,9 +331,39 @@ Proof.
 Defined.
 
 
+Definition pickable_to_option : forall A (P : A -> Prop),
+  pickable P ->
+  option A.
+Proof.
+  intros A P [[x p]|nE].
+  - exact (Some x).
+  - exact None.
+Defined.
+
+Lemma pickable_to_option_Some : forall A P (PP : pickable P) (a : A),
+  pickable_to_option PP = Some a ->
+  P a.
+Proof.
+  intros A P [[x p]|nE] a E; inversion E.
+  now subst.
+Qed.
+
+Lemma pickable_to_option_None : forall A P (PP : pickable P) (a : A),
+  P a ->
+  pickable_to_option PP <> None.
+Proof.
+  intros A P [[x p]|nE] a pa E; inversion E.
+  apply nE. now exists a.
+Qed.
+
+
 (** * Tactics **)
 
 Ltac prove_pickable := now eauto with pickability decidability.
+
+Notation "'pick' P" :=
+  (@pickable_to_option _ P ltac:(prove_pickable))
+  (at level 70, only parsing).
 
 (** Return the function associated to a function call, whichever the arity. **)
 Ltac get_head H :=

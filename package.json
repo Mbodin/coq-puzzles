@@ -8,8 +8,12 @@
 		"install": "dune install --prefix=#{self.install}",
 		"buildsInSource": "_build"
 	},
+	"scripts": {
+		"doc": "dune build @doc"
+	},
 	"dependencies": {
 		"@opam/dune": "~2.5",
-		"@opam/coq": "8.10.2"
+		"@opam/coq": "8.10.2",
+		"@opam/odoc": "*"
 	}
 }

@@ -57,6 +57,31 @@ Proof.
   do 2 erewrite Nat.ltb_antisym. now repeat erewrite leb_correct_conv.
 Qed.
 
+(** A board is entirely represented by its state. **)
+Definition board_equiv (b1 b2 : board) := forall x y, state b1 x y = state b2 x y.
+
+(** [board_equiv] is an equivalence relation. **)
+
+Lemma board_equiv_refl : forall b, board_equiv b b.
+Proof.
+  now intros b x y.
+Qed.
+
+Lemma board_equiv_sym : forall b1 b2,
+  board_equiv b1 b2 ->
+  board_equiv b2 b1.
+Proof.
+  now intros b1 b2 E x y.
+Qed.
+
+Lemma board_equiv_trans : forall b1 b2 b3,
+  board_equiv b1 b2 ->
+  board_equiv b2 b3 ->
+  board_equiv b1 b3.
+Proof.
+  intros b1 b2 b3 E12 E23 x y. rewrite E12. now rewrite E23.
+Qed.
+
 (** The rules of the game are simple: at each turn, the current player chooses
   a [X] tile.  Then every tile below or right of the chosen tile (including the
   current tile itself) is removed from the game.
@@ -82,7 +107,8 @@ Qed.
   The first player who can no longer play looses.
 **)
 
-Record turn x y (st st' : board) : Prop := {
+(** Given a board, and a turn position [(x, y)], recognize the resulting board. **)
+Record turn_position (st : board) x y (st' : board) : Prop := {
     turn_valid : state st x y = true ;
     turn_update : forall x' y',
       state st' x' y' =
@@ -91,29 +117,11 @@ Record turn x y (st st' : board) : Prop := {
         else false
   }.
 
-(* TODO
-Lemma turn_pickable : forall x y st,
-  pickable (turn x y st).
-Proof.
-  intros x y st. dtest (state st x y = true /\ (x <> 0 \/ y <> 0)).
-  - intros [valid not_origin]. left.
-    eexists {|
-        length := length st ;
-        state x' y' :=
-          if (x' <? x) || (y' <? y) then
-            state st x' y'
-          else false
-      |}.
-    now constructor.
-  - intros A. right. intros [b T]. destruct A as [D|[? ?]].
-    + apply D. now apply turn_valid with b.
-    + subst. pose (E := state_origin b).
-      now rewrite (turn_update _ _ _ _ T) in E.
-Defined.
-*)
+Definition turn (st st' : board) : Prop :=
+  exists x y, turn_position st x y st'.
 
 (** Reconstruct the board from a position [(x, y)]. **)
-Program Definition make_turn st x y (valid : state st x y = true) (not_origin : x <> 0 \/ y <> 0) := {|
+Local Program Definition make_turn st x y (valid : state st x y = true) (not_origin : x <> 0 \/ y <> 0) := {|
     length := length st ;
     state x' y' :=
       if (x' <? x) || (y' <? y) then
@@ -137,15 +145,28 @@ Proof.
   now destruct not_origin as [D|D].
 Qed.
 
-Lemma make_turn_correct : forall st x y valid not_origin,
-  turn x y st (make_turn st x y valid not_origin).
+Local Lemma make_turn_correct : forall st x y valid not_origin,
+  turn_position st x y (make_turn st x y valid not_origin).
 Proof.
   intros st x y valid not_origin. now constructor.
 Qed.
 
-(** If the current player can’t play, than only the origin is left on the board. **)
+(** We can use the definition [make_turn] to show that the next turn is explorable. **)
+Lemma turn_pickable : forall st x y,
+  pickable (turn_position st x y). (* TODO: explorable *)
+Proof.
+  intros st x y. dtest (state st x y = true /\ (x <> 0 \/ y <> 0)).
+  - intros [valid not_origin]. left.
+    exists (make_turn st x y valid not_origin). now apply make_turn_correct.
+  - intros A. right. intros [b T]. destruct A as [D|[? ?]].
+    + apply D. now apply turn_valid with b.
+    + subst. pose (E := state_origin b).
+      now rewrite (turn_update _ _ _ _ T) in E.
+Defined.
+
+(** If the current player can’t play, then only the origin is left on the board. **)
 Lemma no_turn_only_origin : forall st,
-  (forall st' x y, ~ turn x y st st') -> forall x y,
+  (forall st', ~ turn st st') -> forall x y,
   state st x y = true <-> x = 0 /\ y = 0.
 Proof.
   intros st N x y. test (x = 0 /\ y = 0).
@@ -153,20 +174,21 @@ Proof.
     intro. now apply state_origin.
   - intro nE. assert (not_origin : x <> 0 \/ y <> 0).
     { now test (x = 0); auto. }
-    clear nE. inversion not_origin;
-      (split; [ intros E'; exfalso; eapply N; apply (make_turn_correct _ _ _ E' not_origin)
-              | now intros [? ?]; subst ]).
+    clear nE. split.
+    + intro E'. exfalso. eapply N. do 2 eexists.
+      now apply make_turn_correct with (valid := E') (not_origin := not_origin).
+    + intros [? ?]. subst. now inversion not_origin.
 Qed.
 
-(** The puzzle is then the following: for which value of [x] and [y] is there a winning
+(** We can now state the puzzle: for which value of [x] and [y] is there a winning
   strategy for the first player starting from [initial x y _ _]? **)
 
 (** If [x = y = 1], then only the origin is there and the first player immediately looses. **)
 
-Lemma x_y_1 : forall st x y,
-  ~ turn x y (initial 1 1 ltac:(apply gt_Sn_O) ltac:(apply gt_Sn_O)) st.
+Lemma x_y_1 : forall st,
+  ~ turn (initial 1 1 ltac:(apply gt_Sn_O) ltac:(apply gt_Sn_O)) st.
 Proof.
-  intros st x y turn.
+  intros st [x [y turn]].
   assert (Exy : x = 0 /\ y = 0).
   {
     pose (E := turn_valid _ _ _ _ turn).
