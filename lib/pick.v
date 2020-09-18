@@ -7,7 +7,7 @@ Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
 
-(** * Definition of Pickability **)
+(** * Definition of pickability **)
 
 (** A variant of [decidable] in which we provide a witness. **)
 Definition pickable A (P : A -> Prop) :=
@@ -24,6 +24,9 @@ Definition pickable4 A1 A2 A3 A4 (P : A1 -> A2 -> A3 -> A4 -> Prop) :=
 
 Definition pickable5 A1 A2 A3 A4 A5 (P : A1 -> A2 -> A3 -> A4 -> A5 -> Prop) :=
   { x | let '(x1, x2, x3, x4, x5) := x in P x1 x2 x3 x4 x5 } + { ~ exists x1 x2 x3 x4 x5, P x1 x2 x3 x4 x5 }.
+
+Create HintDb pickability.
+
 
 (** * Lemmas about pickability **)
 
@@ -152,6 +155,8 @@ Proof.
   - right. intros [x1 [x2 p]]. apply nE. exists x1. now exists x2.
 Defined.
 
+Hint Resolve pickable2_weaken : pickability.
+
 Lemma pickable3_weaken : forall A1 A2 A3 (P : A1 -> A2 -> A3 -> Prop),
   pickable3 P ->
   pickable2 (fun a1 a2 => exists a3, P a1 a2 a3).
@@ -160,6 +165,8 @@ Proof.
   - left. exists (x1, x2). now exists x3.
   - right. intros [x1 [x2 [x3 p]]]. apply nE. exists x1. exists x2. now exists x3.
 Defined.
+
+Hint Resolve pickable3_weaken : pickability.
 
 Lemma pickable4_weaken : forall A1 A2 A3 A4 (P : A1 -> A2 -> A3 -> A4 -> Prop),
   pickable4 P ->
@@ -171,6 +178,8 @@ Proof.
     exists x1. exists x2. exists x3. now exists x4.
 Defined.
 
+Hint Resolve pickable4_weaken : pickability.
+
 Lemma pickable5_weaken : forall A1 A2 A3 A4 A5 (P : A1 -> A2 -> A3 -> A4 -> A5 -> Prop),
   pickable5 P ->
   pickable4 (fun a1 a2 a3 a4 => exists a5, P a1 a2 a3 a4 a5).
@@ -180,6 +189,8 @@ Proof.
   - right. intros [x1 [x2 [x3 [x4 [x5 p]]]]]. apply nE.
     exists x1. exists x2. exists x3. exists x4. now exists x5.
 Defined.
+
+Hint Resolve pickable5_weaken : pickability.
 
 Lemma pickable_augment : forall A1 A2 (P : A2 -> Prop),
   A1 ->
@@ -191,6 +202,8 @@ Proof.
   - right. intros [_ [x2 p]]. apply nE. now exists x2.
 Defined.
 
+Hint Resolve pickable_augment : pickability.
+
 Lemma pickable2_augment : forall A1 A2 A3 (P : A2 -> A3 -> Prop),
   A1 ->
   pickable2 P ->
@@ -200,6 +213,8 @@ Proof.
   - left. now exists (x1, x2, x3).
   - right. intros [_ [x2 [x3 p]]]. apply nE. exists x2. now exists x3.
 Defined.
+
+Hint Resolve pickable2_augment : pickability.
 
 Lemma pickable3_augment : forall A1 A2 A3 A4 (P : A2 -> A3 -> A4 -> Prop),
   A1 ->
@@ -212,6 +227,8 @@ Proof.
     exists x2. exists x3. now exists x4.
 Defined.
 
+Hint Resolve pickable3_augment : pickability.
+
 Lemma pickable4_augment : forall A1 A2 A3 A4 A5 (P : A2 -> A3 -> A4 -> A5 -> Prop),
   A1 ->
   pickable4 P ->
@@ -223,6 +240,8 @@ Proof.
     exists x2. exists x3. exists x4. now exists x5.
 Defined.
 
+Hint Resolve pickable4_augment : pickability.
+
 Lemma decidable_pickable : forall A P,
   A ->
   decidable P ->
@@ -232,6 +251,8 @@ Proof.
   - left. now exists a.
   - right. now intros [_ p].
 Defined.
+
+Hint Resolve decidable_pickable : pickability.
 
 Lemma pickable2_decidable : forall A1 A2 (P : A1 -> A2 -> Prop),
   pickable2 P ->
@@ -311,6 +332,8 @@ Defined.
 
 
 (** * Tactics **)
+
+Ltac prove_pickable := now eauto with pickability decidability.
 
 (** Return the function associated to a function call, whichever the arity. **)
 Ltac get_head H :=

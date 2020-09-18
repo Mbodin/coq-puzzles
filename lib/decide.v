@@ -2,7 +2,7 @@
 
 From Lib Require Export common.
 
-(** * General Definitions **)
+(** * General definitions **)
 
 (** In contrary to [Decidable.decidable] this file is based on a computable version. **)
 Definition decidable P := { P } + { ~ P }.
@@ -155,7 +155,7 @@ Definition comparable T := forall x y : T, decidable (x = y).
 Hint Unfold comparable : decidability.
 
 
-(** * Classical Logic **)
+(** * Classical logic **)
 
 (** Once a proposition is proven decidable, we get all the usual classical properties
   for free, without having to add any axioms to Coq. **)
@@ -321,9 +321,9 @@ Tactic Notation "dsimpl" "in" "*" :=
   end.
 
 
-(** * Adding External Lemmas to the Database **)
+(** * Adding external lemmas to the database **)
 
-(** ** Basic Data Types **)
+(** ** Basic data types **)
 
 Lemma unit_comparable : comparable unit.
 Proof.
