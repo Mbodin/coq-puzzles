@@ -1,5 +1,5 @@
 
-From Lib Require Import decide pick.
+From Lib Require Import decide pick explore.
 Open Scope nat_scope.
 
 (** This problem was given to me by Rao Xiaojia.
@@ -95,15 +95,20 @@ Record turn x y (st st' : board) : Prop := {
 Lemma turn_pickable : forall x y st,
   pickable (turn x y st).
 Proof.
-  intros x y st. test (state st x y = true /\ (x <> 0 \/ y <> 0)).
+  intros x y st. dtest (state st x y = true /\ (x <> 0 \/ y <> 0)).
   - intros [valid not_origin]. left.
-    refine {|
-    length := length st ;
-    state x' y' :=
-      if (x' <? x) || (y' <? y) then
-        state st x' y'
-      else false
-  |}.
+    eexists {|
+        length := length st ;
+        state x' y' :=
+          if (x' <? x) || (y' <? y) then
+            state st x' y'
+          else false
+      |}.
+    now constructor.
+  - intros A. right. intros [b T]. destruct A as [D|[? ?]].
+    + apply D. now apply turn_valid with b.
+    + subst. pose (E := state_origin b).
+      now rewrite (turn_update _ _ _ _ T) in E.
 Defined.
 *)
 

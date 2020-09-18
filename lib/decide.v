@@ -182,6 +182,15 @@ Proof.
   now auto.
 Qed.
 
+Lemma not_not_iff : forall P,
+  decidable P ->
+  ~ ~ P <-> P.
+Proof.
+  intros P D. split.
+  - now apply dec_not_not.
+  - now apply not_not.
+Qed.
+
 Lemma dec_pierce : forall P Q,
   decidable P ->
   ((P -> Q) -> P) -> P.
@@ -198,13 +207,6 @@ Proof.
   now intros P Q [?|?]; auto.
 Qed.
 
-Lemma not_or : forall P Q,
-  ~ (P \/ Q) ->
-  ~ P /\ ~ Q.
-Proof.
-  now auto.
-Qed.
-
 Lemma or_not : forall P Q,
   ~ P \/ ~ Q ->
   ~ (P /\ Q).
@@ -212,11 +214,35 @@ Proof.
   now intros P Q [?|?]; auto.
 Qed.
 
+Lemma not_and_iff : forall P Q,
+  decidable P ->
+  ~ (P /\ Q) <-> ~ P \/ ~ Q.
+Proof.
+  intros P Q D. split.
+  - now apply dec_not_and.
+  - now apply or_not.
+Qed.
+
+Lemma not_or : forall P Q,
+  ~ (P \/ Q) ->
+  ~ P /\ ~ Q.
+Proof.
+  now auto.
+Qed.
+
 Lemma and_not : forall P Q,
   ~ P /\ ~ Q ->
   ~ (P \/ Q).
 Proof.
   now intros P Q [? ?] [?|?]; auto.
+Qed.
+
+Lemma not_or_iff : forall P Q,
+  ~ (P \/ Q) <-> ~ P /\ ~ Q.
+Proof.
+  intros P Q. split.
+  - now apply not_or.
+  - now apply and_not.
 Qed.
 
 Lemma dec_flatten_impl : forall P Q : Prop,
@@ -230,9 +256,26 @@ Qed.
 Lemma dec_not_impl : forall P Q : Prop,
   decidable P ->
   ~ (P -> Q) ->
-  P \/ ~ Q.
+  P /\ ~ Q.
 Proof.
-  now intros P Q [?|?]; auto.
+  intros P Q [?|?] N; split; auto.
+  exfalso. now apply N.
+Qed.
+
+Lemma impl_not : forall P Q,
+  P /\ ~ Q ->
+  ~ (P -> Q).
+Proof.
+  now intros P Q [? ?] I; auto.
+Qed.
+
+Lemma not_impl_iff : forall P Q : Prop,
+  decidable P ->
+  ~ (P -> Q) <-> P /\ ~ Q.
+Proof.
+  intros P Q D. split.
+  - now apply dec_not_impl.
+  - now apply impl_not.
 Qed.
 
 Lemma contrapositive : forall P Q : Prop,
@@ -251,42 +294,59 @@ Proof.
   now apply (contrapositive _ (~ Q)); auto.
 Qed.
 
+Lemma True_and_iff : forall P,
+  True /\ P <-> P.
+Proof.
+  now auto.
+Qed.
+
+Lemma and_True_iff : forall P,
+  P /\ True <-> P.
+Proof.
+  now auto.
+Qed.
+
+Lemma False_or_iff : forall P,
+  False \/ P <-> P.
+Proof.
+  intros P; split.
+  - now intros [?|?].
+  - now right.
+Qed.
+
+Lemma or_False_iff : forall P,
+  P \/ False <-> P.
+Proof.
+  intros P; split.
+  - now intros [?|?].
+  - now left.
+Qed.
+
+
 (** Simplify an hypothesis. **)
 Ltac dsimpl_in H :=
   repeat match type of H with
-  | ~ ~ ?P =>
+  | context [~ ~ ?P] =>
     let D := fresh "D" in
     assert (D : decidable P); [
         prove_decidable
-      | let H' := fresh H in
-        assert (H' : P); [
-            now apply (dec_not_not P D H)
-          | clear H; rename H' into H; clear D ] ]
-  | ~ (?P \/ ?Q) =>
-    let H' := fresh H in
-    assert (H' : ~ P /\ ~ Q); [
-        now apply (not_or _ _ H)
-      | clear H; rename H' into H ]
-  | ~ (?P /\ ?Q) =>
+      | rewrite -> (not_not_iff P D) in H; clear D ]
+  | context [~ (?P \/ ?Q)] =>
+    rewrite -> (not_or_iff P Q) in H
+  | context [~ (?P /\ ?Q)] =>
     let D := fresh "D" in
     assert (D : decidable P); [
         prove_decidable
-      | let H' := fresh H in
-        assert (H' : ~ P \/ ~ Q); [
-            now apply (dec_not_and P Q D H)
-          | clear H; rename H' into H; clear D ] ]
-  | ~ (?P -> ?Q) =>
+      | rewrite -> (not_and_iff P Q D) in H; clear D ]
+  | context [~ (?P -> ?Q)] =>
     let D := fresh "D" in
     assert (D : decidable P); [
         prove_decidable
-      | let H' := fresh H in
-        assert (H' : ~ P \/ ~ Q); [
-            now apply (dec_not_impl P Q D H)
-          | clear H; rename H' into H; clear D ] ]
-  | True /\ ?P => destruct H as [_ H]
-  | ?P /\ True => destruct H as [H _]
-  | False \/ ?P => destruct H as [H|H]; [ now destruct H |]
-  | ?P \/ False => destruct H as [H|H]; [| now destruct H ]
+      | rewrite -> (not_impl_iff P Q D) in H; clear D ]
+  | context [True /\ ?P] => rewrite -> (True_and_iff P) in H
+  | context [?P /\ True] => rewrite -> (and_True_iff P) in H
+  | context [False \/ ?P] => rewrite -> (False_or_iff P) in H
+  | context [?P \/ False] => rewrite -> (or_False_iff P) in H
   end.
 
 Tactic Notation "dsimpl" "in" hyp(H) :=
@@ -311,6 +371,29 @@ Ltac dsimpl :=
     | |- ?P /\ True => split; [|now auto]
     | |- False \/ ?P => right
     | |- ?P \/ False => left
+    end;
+    repeat match goal with
+    | |- context [~ ~ ?P] =>
+      let D := fresh "D" in
+      assert (D : decidable P); [
+          prove_decidable
+        | rewrite -> (not_not_iff P D); clear D ]
+    | |- context [~ (?P \/ ?Q)] =>
+      rewrite -> (not_or_iff P Q)
+    | |- context [~ (?P /\ ?Q)] =>
+      let D := fresh "D" in
+      assert (D : decidable P); [
+          prove_decidable
+        | rewrite -> (not_and_iff P Q D); clear D ]
+    | |- context [~ (?P -> ?Q)] =>
+      let D := fresh "D" in
+      assert (D : decidable P); [
+          prove_decidable
+        | rewrite -> (not_impl_iff P Q D); clear D ]
+    | |- context [True /\ ?P] => rewrite -> (True_and_iff P)
+    | |- context [?P /\ True] => rewrite -> (and_True_iff P)
+    | |- context [False \/ ?P] => rewrite -> (False_or_iff P)
+    | |- context [?P \/ False] => rewrite -> (or_False_iff P)
     end
   end.
 
@@ -319,6 +402,9 @@ Tactic Notation "dsimpl" "in" "*" :=
   repeat match goal with
   | H : _ |- _ => progress dsimpl in H
   end.
+
+Ltac dtest P :=
+  test P; dsimpl.
 
 
 (** * Adding external lemmas to the database **)

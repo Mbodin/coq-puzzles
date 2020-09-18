@@ -10,7 +10,7 @@ An `esy` packaging is provided.
 The following lines will fetch and install all dependencies, as well as compiling the project.
 ```bash
 sudo apt install npm git curl m4 autoconf
-sudo npm install --global esy@latest
+sudo npm install --global esy@latest # Tested with version 0.6.6 of esy.
 esy
 ```
 
