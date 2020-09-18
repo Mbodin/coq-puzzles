@@ -1,5 +1,5 @@
 
-From Lib Require Import decidability pickability.
+From Lib Require Import decide pick.
 Open Scope nat_scope.
 
 (** This problem was given to me by Rao Xiaojia.

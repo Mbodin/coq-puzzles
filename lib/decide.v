@@ -380,6 +380,64 @@ Defined.
 
 Hint Resolve decidable_In : decidability.
 
+Lemma decidable_Forall : forall T (P : T -> Prop) l,
+  (forall a, decidable (P a)) ->
+  decidable (List.Forall P l).
+Proof.
+  intros T P l D. induction l as [|a l].
+  - left. now constructor.
+  - apply decidable_equiv with (P a /\ List.Forall P l); [| prove_decidable ].
+    split.
+    + intros [? ?]. now constructor.
+    + now inversion 1.
+Defined.
+
+Hint Resolve decidable_Forall : decidability.
+
+Lemma decidable_Exists : forall T (P : T -> Prop) l,
+  (forall a, decidable (P a)) ->
+  decidable (List.Exists P l).
+Proof.
+  intros T P l D. induction l as [|a l].
+  - right. now inversion 1.
+  - apply decidable_equiv with (P a \/ List.Exists P l); [| prove_decidable ].
+    split.
+    + intros [?|?]; now constructor.
+    + now inversion 1; [left|right].
+Defined.
+
+Hint Resolve decidable_Exists : decidability.
+
+Lemma decidable_Forall2 : forall T1 T2 (P : T1 -> T2 -> Prop) l1 l2,
+  (forall a b, decidable (P a b)) ->
+  decidable (List.Forall2 P l1 l2).
+Proof.
+  intros T1 T2 P l1 l2 D. generalize l2. clear l2.
+  induction l1 as [|a1 l1]; intros [|a2 l2]; try now right; inversion 1.
+  - left. now constructor.
+  - apply decidable_equiv with (P a1 a2 /\ List.Forall2 P l1 l2); [| prove_decidable ].
+    split.
+    + intros [? ?]. now constructor.
+    + now inversion 1.
+Defined.
+
+Hint Resolve decidable_Forall2 : decidability.
+
+Lemma decidable_NoDup : forall T (l : list T),
+  comparable T ->
+  decidable (List.NoDup l).
+Proof.
+  intros T l C. induction l as [|a l].
+  - left. now constructor.
+  - apply decidable_equiv with (~ List.In a l /\ List.NoDup l); [| prove_decidable ].
+    split.
+    + intros [? ?]. now constructor.
+    + now inversion 1.
+Defined.
+
+Hint Resolve decidable_NoDup : decidability.
+
+
 (** ** Arithmetic **)
 
 Lemma nat_comparable : comparable nat.

@@ -1,6 +1,6 @@
 (** Definitions to build computable functions. **)
 
-From Lib Require Import decidability.
+From Lib Require Import decide.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
@@ -37,6 +37,35 @@ Proof.
 Defined.
 
 Hint Resolve pickable_decidable : decidability.
+
+Lemma pickable_disjunction : forall A (P : A -> Prop),
+  pickable P ->
+  (exists x, P x) \/ forall x, ~ P x.
+Proof.
+  intros A P [[x p]|N].
+  - now left; exists x.
+  - right. intros x p. apply N. now exists x.
+Qed.
+
+Lemma not_exists : forall A (P : A -> Prop),
+  ~ (exists x, P x) ->
+  forall x, ~ P x.
+Proof.
+  intros A P nE x p. apply nE. now exists x.
+Qed.
+
+Lemma pickable_not_exists : forall A (P : A -> Prop),
+  (forall x, decidable (P x)) ->
+  pickable (fun x => ~ P x) ->
+  ~ (forall x, P x) ->
+  exists x, ~ P x.
+Proof.
+  intros A P D [[x p]|N] nF.
+  - now exists x.
+  - exfalso. apply nF. intro x. test (P x).
+    + now auto.
+    + intro n. exfalso. apply N. now exists x.
+Qed.
 
 Lemma pickable_equiv : forall A (P1 P2 : A -> Prop),
   (forall a, P1 a <-> P2 a) ->
